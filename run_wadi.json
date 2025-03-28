@@ -1,0 +1,31 @@
+{
+    "dataset_args": {
+        "dataset": "wadi",
+        "train_data_path": "./dataset/wadi/train.csv",
+        "test_data_path": "./dataset/wadi/test.csv",
+        "winsize": 100,
+        "step": 8
+    },
+    "model_args": {
+        "input_dim": 123,
+        "cnn1": 128,
+        "k1": 5,
+        "pad1": 2,
+        "SEratio1": 16,
+        "maxpool1": 2,
+        "cnn2": 256,
+        "k2": 5,
+        "pad2": 2,
+        "maxpool2": 2,
+        "SEratio2": 16,
+        "hidden_dim": 128,
+        "lstm_layers": 8
+    },
+    "training_args": {
+        "model_dir": null,
+        "lr": 0.01,
+        "epochs": 5,
+        "batch_size": 32,
+        "AE_MODEL": false
+    }
+}
