@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 from time import time
 import random
 import json
+import argparse
 
 from data_loader import SeqDataLoader
 from models.my_model import SE_CNN_LSTM
@@ -36,7 +37,14 @@ def set_global_seed(seed=42):
 
 set_global_seed()
 
-config_path = './run_wadi.json'
+argparser = argparse.ArgumentParser(description='Anomaly detection')
+argparser.add_argument('--config', type=str, default='./run_wadi.json', help='Path to the config file')
+args = argparser.parse_args()
+config_path = args.config
+if not os.path.exists(config_path):
+    raise FileNotFoundError(f"Config file not found: {config_path}")
+if not os.path.exists('./checkpoints'):
+    os.makedirs('./checkpoints')
 with open(config_path, 'r') as f:
     config = json.load(f)
 
@@ -60,8 +68,10 @@ print('Data sample shape:', train_data[0][0].shape)
 
 """模型创建"""
 data_dim = train_data[0][0].shape[-1]
-model = SE_CNN_LSTM(model_args)
-# model = LSTMPredictor(input_size=data_dim, hidden_size=args.hidden, num_layers=args.layers)
+model_list = [SE_CNN_LSTM, LSTMPredictor, LSTMAutoencoder]
+model = model_list[model_args["model"]](model_args)  # 选择模型
+# model = SE_CNN_LSTM(model_args)
+# model = LSTMPredictor(model_args)
 # model = LSTMAutoencoder(input_size=data_dim, hidden_size=args.hidden, num_layers=args.layers)
 # AE_MODEL = True
 
@@ -122,10 +132,17 @@ with torch.no_grad():
 
         test_losses += loss.tolist()
 
-# 绘制误差分布图
+# 绘制误差百分图，40%,50%,60%,70%,80%,85%,90%,95%,99%
 plt.figure(figsize=(10, 5))
-plt.hist(test_losses, bins='auto', color='blue', alpha=0.7, label='Test Losses')
-plt.xlabel('Loss')
+loss_percentiles = np.percentile(test_losses, [40, 50, 60, 70, 80, 85, 90, 95, 99])
+plt.bar(range(len(loss_percentiles)), loss_percentiles, tick_label=[40, 50, 60, 70, 80, 85, 90, 95, 99])
+plt.xlabel('Percentiles')
+plt.ylabel('Loss')
+plt.title('Loss Percentiles')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.savefig(f'./checkpoints/{filenameWithoutExt}.png')
+plt.show()
 
 text = []
 for i in [80, 85, 90, 95, 99]:

@@ -7,6 +7,7 @@
         "step": 8
     },
     "model_args": {
+        "model": 0,
         "input_dim": 123,
         "cnn1": 128,
         "k1": 5,
