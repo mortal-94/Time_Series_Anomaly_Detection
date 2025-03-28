@@ -51,8 +51,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Using device:", device)
 
 """数据加载"""
-train_data = SeqDataLoader(dataset_path=dataset_args["train_data_path"], win_size=dataset_args["winsize"], step=dataset_args["step"], name=f"{dataset_args["dataset"]} Train")
-test_data = SeqDataLoader(dataset_path=dataset_args["test_data_path"], win_size=dataset_args["winsize"], step=1, name=f"{dataset_args["dataset"]} Test")
+dataset_name = dataset_args["dataset"]
+train_data = SeqDataLoader(dataset_path=dataset_args["train_data_path"], win_size=dataset_args["winsize"], step=dataset_args["step"], name=f"{dataset_name} Train")
+test_data = SeqDataLoader(dataset_path=dataset_args["test_data_path"], win_size=dataset_args["winsize"], step=1, name=f"{dataset_name} Test")
 y_true = test_data.get_test_labels()
 print(f'Train data length: {len(train_data)}; Test data length {len(test_data)}')
 print('Data sample shape:', train_data[0][0].shape)
@@ -72,7 +73,7 @@ filenameWithoutExt = f'{model.ModelName}_{dataset_args["dataset"]}_{int(time())}
 if training_args["model_dir"] is not None:
     # 如果指定了模型路径，则加载模型参数
     model.load_state_dict(torch.load(training_args["model_dir"]))
-    print(f"Model loaded from {training_args["model_dir"]}")
+    print(f"Model loaded from ", training_args["model_dir"])
 else:
     # 设置超参数
     learning_rate = training_args["lr"]
