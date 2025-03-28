@@ -122,6 +122,11 @@ with torch.no_grad():
 
         test_losses += loss.tolist()
 
+# 绘制误差分布图
+plt.figure(figsize=(10, 5))
+plt.hist(test_losses, bins='auto', color='blue', alpha=0.7, label='Test Losses')
+plt.xlabel('Loss')
+
 text = []
 for i in [80, 85, 90, 95, 99]:
     threshold = np.percentile(test_losses, i)
