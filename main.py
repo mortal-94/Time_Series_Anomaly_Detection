@@ -46,6 +46,10 @@ training_args = config["training_args"]
 
 AE_MODEL = training_args["AE_MODEL"]   # 是否是自编码器模型
 
+# 检测是否有可用的GPU
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("Using device:", device)
+
 """数据加载"""
 train_data = SeqDataLoader(dataset_path=dataset_args["train_data_path"], win_size=dataset_args["winsize"], step=dataset_args["step"], name=f"{dataset_args["dataset"]} Train")
 test_data = SeqDataLoader(dataset_path=dataset_args["test_data_path"], win_size=dataset_args["winsize"], step=1, name=f"{dataset_args["dataset"]} Test")
@@ -59,6 +63,8 @@ model = SE_CNN_LSTM(model_args)
 # model = LSTMPredictor(input_size=data_dim, hidden_size=args.hidden, num_layers=args.layers)
 # model = LSTMAutoencoder(input_size=data_dim, hidden_size=args.hidden, num_layers=args.layers)
 # AE_MODEL = True
+
+model.to(device)  # 将模型移动到GPU上
 
 filenameWithoutExt = f'{model.ModelName}_{dataset_args["dataset"]}_{int(time())}'
 
@@ -81,6 +87,8 @@ else:
     for epoch in tqdm(range(num_epochs)):
         for i, (x, x_1) in enumerate(data_loader):
             optimizer.zero_grad()
+            x = x.to(device)  # 将数据移动到GPU上
+            x_1 = x_1.to(device)  # 将数据移动到GPU上
             y = model(x)
             if AE_MODEL:
                 loss = criterion(y[:,-1,:], x[:,-1,:])  # 自编码器的目标是重构，用窗口内的最后一步比较误差
@@ -103,6 +111,8 @@ criterion = nn.MSELoss(reduction='none')
 test_data_loader = DataLoader(test_data, batch_size=64, shuffle=False)  # 评估所用batch_size不影响
 with torch.no_grad():
     for x, x_1 in tqdm(test_data_loader):
+        x = x.to(device)
+        x_1 = x_1.to(device)
         y = model(x)
         if AE_MODEL:
             loss = criterion(y[:,-1,:], x[:,-1,:]).mean(dim=1)     # 自编码器的目标是重构，用窗口内的最后一步比较误差
