@@ -94,7 +94,7 @@ class SE_CNN_LSTM(nn.Module):
         print("cnn_out shape:", cnn_out.shape)
 
         cnn_out = model.cnn2(cnn_out)
-        shortcut = model.shortcut2(cn)
+        shortcut = model.shortcut2(cnn_out1)
         shortcut = nn.AdaptiveAvgPool1d(cnn_out.shape[2])(shortcut)
         cnn_out = cnn_out + shortcut
 
