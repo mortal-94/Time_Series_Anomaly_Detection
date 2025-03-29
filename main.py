@@ -38,7 +38,8 @@ def set_global_seed(seed=42):
 set_global_seed()
 
 argparser = argparse.ArgumentParser(description='Anomaly detection')
-argparser.add_argument('--config', type=str, default='./run_wadi.json', help='Path to the config file')
+# argparser.add_argument('--config', type=str, default='./run_wadi.json', help='Path to the config file')
+argparser.add_argument('--config', type=str, default='./run_swat.json', help='Path to the config file')
 args = argparser.parse_args()
 config_path = args.config
 if not os.path.exists(config_path):
@@ -64,6 +65,7 @@ train_data = SeqDataLoader(dataset_path=dataset_args["train_data_path"], win_siz
 test_data = SeqDataLoader(dataset_path=dataset_args["test_data_path"], win_size=dataset_args["winsize"], step=1, name=f"{dataset_name} Test")
 y_true = test_data.get_test_labels()
 print(f'Train data length: {len(train_data)}; Test data length {len(test_data)}')
+print(f'Test set Normal : {np.sum(y_true == 0)}; Attack : {np.sum(y_true == 1)}')
 print('Data sample shape:', train_data[0][0].shape)
 
 """模型创建"""
@@ -111,7 +113,10 @@ else:
             losses.append(loss.item())
             if i % 500 == 0:
                 print(f'Epoch {epoch}, batch {i}, loss: {loss.item()}')
-    print(f"mean loss {np.mean(losses)}")
+    # 记录最后一个epoch的的最大loss
+    max_loss = max(losses[len(losses)-len(data_loader):])
+    config["training_args"]["max_loss"] = max_loss  # 记录最大loss
+    print(f"Max loss in the last epoch: {max_loss}")
     # 保存模型
     torch.save(model.state_dict(), f"./checkpoints/{filenameWithoutExt}.pth")
 
@@ -132,28 +137,20 @@ with torch.no_grad():
 
         test_losses += loss.tolist()
 
-# 绘制误差百分图，40%,50%,60%,70%,80%,85%,90%,95%,99%
-plt.figure(figsize=(10, 5))
-loss_percentiles = np.percentile(test_losses, [40, 50, 60, 70, 80, 85, 90, 95, 99])
-plt.bar(range(len(loss_percentiles)), loss_percentiles, tick_label=[40, 50, 60, 70, 80, 85, 90, 95, 99])
-plt.xlabel('Percentiles')
-plt.ylabel('Loss')
-plt.title('Loss Percentiles')
-plt.xticks(rotation=45)
-plt.tight_layout()
-plt.savefig(f'./checkpoints/{filenameWithoutExt}.png')
-plt.show()
+
 
 text = []
-for i in [80, 85, 90, 95, 99]:
-    threshold = np.percentile(test_losses, i)
-    y_pred = (test_losses > threshold).astype(int)
+thresholds = np.percentile(test_losses, [80, 85, 90, 95, 99]).tolist()
+thresholds += [config["training_args"]["max_loss"]]  # 记录最大loss
+
+for threshold in thresholds:
+    y_pred = (np.array(test_losses) > threshold).astype(int)
     if AE_MODEL:    
         y_pred = np.concatenate([np.zeros(dataset_args["winsize"]-1), y_pred]) # 自编码器的预测是窗口内的最后一步
         y_pred = np.concatenate([y_pred, np.zeros(1)])     # 由于数据集构造是面向预测的，最后一步不在训练集里面
     else:
         y_pred = np.concatenate([np.zeros(dataset_args["winsize"]), y_pred])  # 预测下一步
-    text.append(f'Anomaly detected: {i}%, threshold: {threshold}\n' + classification_report(y_true, y_pred, target_names=['Normal', 'Attack']) + '\n')
+    text.append(f'threshold: {threshold}\n' + classification_report(y_true, y_pred, target_names=['Normal', 'Attack']) + '\n')
     print(text[-1])        
     # print(f'Anomaly detected: {i}%, threshold: {threshold}')
     # print(confusion_matrix(y_true, y_pred))   # 混淆矩阵

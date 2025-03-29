@@ -1,0 +1,33 @@
+{
+    "dataset_args": {
+        "dataset": "swat",
+        "train_data_path": "./dataset/swat/train.csv",
+        "test_data_path": "./dataset/swat/test.csv",
+        "winsize": 100,
+        "step": 20
+    },
+    "model_args": {
+        "model": 0,
+        "input_dim": 51,
+        "cnn1": 32,
+        "k1": 11,
+        "pad1": 5,
+        "SEratio1": 8,
+        "maxpool1": 2,
+        "cnn2": 16,
+        "k2": 11,
+        "pad2": 5,
+        "maxpool2": 2,
+        "SEratio2": 4,
+        "hidden_dim": 16,
+        "lstm_layers": 4
+    },
+    "training_args": {
+        "model_dir": null,
+        "lr": 0.01,
+        "epochs": 10,
+        "batch_size": 32,
+        "AE_MODEL": false,
+        "threshold": 0.5
+    }
+}
