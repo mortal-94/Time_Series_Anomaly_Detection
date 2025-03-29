@@ -16,8 +16,8 @@ import argparse
 
 from data_loader import SeqDataLoader
 from models.Res_SE_CNN_LSTM import Res_SE_CNN_LSTM
-from models.lstm import LSTMPredictor
-from models.lstm_ae import LSTMAutoencoder
+from models.LSTMPredictor import LSTMPredictor
+from models.LSTMAutoencoder import LSTMAutoencoder
 
 def set_global_seed(seed=42):
     # 设置 Python 的随机种子

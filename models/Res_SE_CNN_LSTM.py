@@ -50,6 +50,7 @@ class Res_SE_CNN_LSTM(nn.Module):
     def __init__(self, args):
         super(Res_SE_CNN_LSTM, self).__init__()
         self.args = args
+        self.se0 = ChannelAttention(args["input_dim"], 4)
         self.cnn1 = CNN_Block(args["input_dim"], args["cnn1"], args["k1"], args["SEratio1"])
         self.shortcut1 = Shortcut_Block(args["input_dim"], args["cnn1"])
         self.cnn2 = CNN_Block(args["cnn1"], args["cnn2"], args["k2"], args["SEratio2"])
@@ -63,7 +64,7 @@ class Res_SE_CNN_LSTM(nn.Module):
     def forward(self, x):
         # x形状: (batch_size, seq_len, input_dim)
         x = x.permute(0, 2, 1)  # (batch, channels or input_dim, seq_len)
-        cnn_out = self.cnn1(x) # (batch, new_channels, new_seq_len)
+        cnn_out = self.cnn1(self.se0(x)) # (batch, new_channels, new_seq_len)
         shortcut = self.shortcut1(x) 
         cnn_out1 = cnn_out + shortcut
 

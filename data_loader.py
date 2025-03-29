@@ -25,6 +25,8 @@ class SeqDataLoader(Dataset):
 
     def get_test_labels(self):
         return self.labels
+    def get_test_data(self):
+        return self.data
 
     def __len__(self):
         # 保留最后一个时间步不提供
