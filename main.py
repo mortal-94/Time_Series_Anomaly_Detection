@@ -15,7 +15,7 @@ import json
 import argparse
 
 from data_loader import SeqDataLoader
-from models.my_model import SE_CNN_LSTM
+from models.Res_SE_CNN_LSTM import Res_SE_CNN_LSTM
 from models.lstm import LSTMPredictor
 from models.lstm_ae import LSTMAutoencoder
 
@@ -70,7 +70,7 @@ print('Data sample shape:', train_data[0][0].shape)
 
 """模型创建"""
 data_dim = train_data[0][0].shape[-1]
-model_list = [SE_CNN_LSTM, LSTMPredictor, LSTMAutoencoder]
+model_list = [Res_SE_CNN_LSTM, LSTMPredictor, LSTMAutoencoder]
 model = model_list[model_args["model"]](model_args)  # 选择模型
 # model = SE_CNN_LSTM(model_args)
 # model = LSTMPredictor(model_args)
