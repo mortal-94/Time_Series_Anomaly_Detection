@@ -16,6 +16,7 @@ import argparse
 
 from data_loader import SeqDataLoader
 from models.Res_SE_CNN_LSTM import Res_SE_CNN_LSTM
+from models.SE_CNN_LSTM import SE_CNN_LSTM
 from models.LSTMPredictor import LSTMPredictor
 from models.LSTMAutoencoder import LSTMAutoencoder
 
@@ -23,7 +24,7 @@ from models.LSTMAutoencoder import LSTMAutoencoder
 
 argparser = argparse.ArgumentParser(description='Anomaly detection')
 # argparser.add_argument('--config', type=str, default='./run_wadi.json', help='Path to the config file')
-argparser.add_argument('--config', type=str, default='./checkpoints/MyModel_swat_1743221612.json', help='Path to the config file')
+argparser.add_argument('--config', type=str, default='./checkpoints/Res_SE_CNN_LSTM_swat_1743313052.json', help='Path to the config file')
 args = argparser.parse_args()
 config_path = args.config
 if not os.path.exists(config_path):
@@ -57,10 +58,12 @@ y_true = test_data.get_test_labels()
 print(f'Test data length {len(test_data)}')
 print(f'Test set Normal : {np.sum(y_true == 0)}; Attack : {np.sum(y_true == 1)}')
 print('Data sample shape:', test_data[0][0].shape)
+y_true_1 = np.where(y_true==1)[0]
+print(len(y_true_1))
 
 """模型创建"""
 data_dim = test_data[0][0].shape[-1]
-model_list = [Res_SE_CNN_LSTM, LSTMPredictor, LSTMAutoencoder]
+model_list = [Res_SE_CNN_LSTM, SE_CNN_LSTM, LSTMPredictor, LSTMAutoencoder]
 model = model_list[model_args["model"]](model_args)  # 选择模型
 model.load_state_dict(torch.load(training_args["model_dir"]))
 print(f"Model loaded from ", training_args["model_dir"])
@@ -83,11 +86,20 @@ with torch.no_grad():
 
         test_losses += loss.tolist()
 
+# 绘图
+plt.figure(figsize=(10, 6))
+plt.plot(test_losses, color='blue', alpha=0.7)
+plt.scatter(y_true_1, np.array(test_losses)[y_true_1], color='red', label='Anomaly', alpha=0.7, s=10)
+plt.title('Test Losses')
+plt.xlabel('Sample Index')
+plt.legend()
+plt.savefig(f'./checkpoints/{model.ModelName}_{dataset_name}_test_losses.png')
 
 
 text = []
-thresholds = np.percentile(test_losses, [80, 85, 90, 95, 99]).tolist()
-thresholds += [config["training_args"]["threshold"]]  
+print(np.percentile(test_losses, np.arange(80,100,1).tolist()).tolist())
+thresholds = np.arange(0.2, 1.51,0.1).tolist()
+# thresholds += [config["training_args"]["threshold"]]  
 
 for threshold in thresholds:
     y_pred = (np.array(test_losses) > threshold).astype(int)

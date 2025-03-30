@@ -72,10 +72,10 @@ class Res_SE_CNN_LSTM(nn.Module):
         shortcut = self.shortcut2(cnn_out1)
         cnn_out = cnn_out + shortcut
 
-        shortcut = self.shortcut3(cnn_out)
+        shortcut = self.shortcut3(cnn_out)  # (batch, 1, new_seq_len)
         cnn_out = cnn_out.permute(0, 2, 1)  # (batch, new_seq_len, 128)
         lstm_out, _ = self.lstm(cnn_out)  # (batch, new_seq_len, hidden_dim)
-        shortcut = nn.AdaptiveAvgPool1d(lstm_out.shape[2])(shortcut)
+        shortcut = nn.AdaptiveAvgPool1d(lstm_out.shape[2])(shortcut)    # (batch, 1, hidden_dim)
         last_lstm = lstm_out[:, -1, :] + shortcut.squeeze(1)  # (batch, hidden_dim)
         output = self.fc(last_lstm)
         return output

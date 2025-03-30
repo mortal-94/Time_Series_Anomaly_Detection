@@ -70,7 +70,7 @@ print('Data sample shape:', train_data[0][0].shape)
 data_dim = train_data[0][0].shape[-1]
 model_list = [Res_SE_CNN_LSTM, LSTMPredictor, LSTMAutoencoder]
 model = model_list[model_args["model"]](model_args)  # 选择模型
-
+print(model.ModelName)
 model.to(device)  # 将模型移动到GPU上
 
 filenameWithoutExt = f'{model.ModelName}_{dataset_args["dataset"]}_{int(time())}'
@@ -80,7 +80,7 @@ learning_rate = training_args["lr"]
 num_epochs = training_args["epochs"]
 batch_size = training_args["batch_size"]
 criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=5e-4)
+optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 data_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
 # 训练循环，显示进度条
 losses = []
@@ -120,6 +120,18 @@ with torch.no_grad():
 
         losses4train.append(loss.item())
 
+# 每个epoch的平均损失
+avg_loss = [np.mean(losses[i:i+len(data_loader)]) for i in range(0, len(losses), len(data_loader))]
+# 绘制训练损失曲线
+plt.figure(figsize=(10, 5))
+plt.plot(avg_loss, label='Average Loss per Epoch')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.title('Training Loss')
+plt.legend()
+plt.savefig(f"./checkpoints/{filenameWithoutExt}_loss_epoch.png")
+plt.show()
+
 # 绘制误差数值分布，以便选择阈值
 plt.figure(figsize=(10, 6))
 plt.hist(losses4train, bins=100, color='blue', alpha=0.7)
@@ -130,6 +142,7 @@ plt.grid()
 plt.savefig(f"./checkpoints/{filenameWithoutExt}_loss_distribution.png")
 plt.show()
 
+print(np.percentile(losses4train, np.arange(80,100,1).tolist()).tolist())
 
 """结果保存"""
 # 保存超参数结果到json文件
