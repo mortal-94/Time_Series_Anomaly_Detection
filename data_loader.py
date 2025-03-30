@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 
 
 class SeqDataLoader(Dataset):
-    def __init__(self, dataset_path="./dataset/SWaT/swat_train2.csv", win_size=64, step=1, name="SWaT Train"):
+    def __init__(self, dataset_path="./dataset/swat/train.csv", win_size=64, step=1, name="SWaT Train"):
         self.step = step    # step size
         self.win_size = win_size    # window size
         print(f"Loading {name} data, window size is {win_size}, step is {step}")
